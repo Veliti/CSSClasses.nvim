@@ -1,62 +1,33 @@
+local agrigator = require("CSSClasses.agrigator")
+local lsp = require("CSSClasses.null-ls")
 local io = require("CSSClasses.io")
 local parsers = require("CSSClasses.parsers")
-local ftdetect = require("plenary.filetype")
+local insertons = require("CSSClasses.insertions")
 
+LSP_NAME = "CSSClasses"
+AUGROUP = vim.api.nvim_create_augroup(LSP_NAME, { clear = true })
 local M = {}
+print("pre source")
 
-local path = "/home/veliti/Documents/Projects/CSSClasses.nvim/lua/CSSClasses/test/"
-
----@class RuleSet
----@field classnames string[]
----@field bounds {upper: number, lower : number}
-
-M.RuleSets = {
-	---@type table<string, RuleSet[]>
-	dictionary = {},
-}
-
----@param filename string
-function M.RuleSets:insert(filename)
-	local ft = ftdetect.detect(filename, {})
-	local parser = parsers[ft]
-	if not parser then
-		return
-	end
-	local source = io.read_file(filename)
-	self.dictionary[filename] = parser.parse(source)
-end
----@param filename string
-function M.RuleSets:remove(filename)
-	self.dictionary[filename] = nil
-end
----@param filename string
-function M.RuleSets:contains(filename)
-	return self.dictionary[filename]
-end
-
----@type table<fs_event, function>
-M.handle_fs = {
-	["CREATED"] = function(file)
-		if not M.RuleSets:contains(file) then
-			M.RuleSets:insert(file)
-		end
-	end,
-	["CHANGED"] = function(file)
-		M.RuleSets:insert(file)
-	end,
-	["RENAMDED"] = function(file, newname) end,
-	["REMOVED"] = function(file)
-		M.RuleSets:remove(file)
-	end,
-}
 ---@param opts table | nil
 M.setup = function(opts)
-	-- TODO: stuff
-	---@type fs_callback
-	local callback = function(type, file, ...)
-		M.handle_fs[type](file, ...)
-	end
+	print("setup")
+	vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+		group = AUGROUP,
+		pattern = vim.tbl_extend("keep", parsers.get_supported_files(), insertons.get_supported_files()),
+		once = true,
+		callback = function(params)
+			local root = io.get_root(params.file, { ".git", ".csproj" })
+			if not root then
+				lsp.logger:warn("couldnt find root defaulting to uv.cwd")
+				root = assert(vim.loop.cwd(), "CWD DOESNT EXIST ")
+			end
+			lsp.logger:info(string.format("root: %s", root))
 
-	io.poll_fs(path, callback)
+			agrigator:init(root)
+			lsp.setup_null_ls(root)
+		end,
+	})
 end
+print("post source")
 return M

@@ -1,16 +1,23 @@
 local null_ls = require("null-ls")
-local parsers = require("CSSClasses.parsers")
+local agrigator = require("CSSClasses.agrigator")
 
-M.setuplsp = function()
+local M = {}
+M.logger = require("null-ls.logger")
+
+---@type table<fs_event, function>
+
+---@param root string
+M.setup_null_ls = function(root)
 	local completion_source = {
 		method = null_ls.methods.COMPLETION,
-		filetypes = {},
+		filetypes = { "html", "css" },
 		generator = {
 			async = true,
+			---@param params NullLsParams
 			fn = function(params, done)
 				local line = params.content[params.row]
 				local cursor = params.col
-				local patterns = M.complitionPatterns[parsers.get_lang_at_cursor()]
+				local patterns = M.complition_patterns[params.filetype]
 
 				local result
 				for _, pattern in ipairs(patterns) do
@@ -23,51 +30,14 @@ M.setuplsp = function()
 					return
 				end
 
-				local items = M.createComplitionItems(M._classes, params.word_to_complete)
-				done({ {
-					items = items,
-					isIncomplete = #items > 0,
-				} })
+				local list = agrigator:get_complition_list()
+				done({ list })
 			end,
 		},
 	}
-	if null_ls.is_registered(M._name) then
-		null_ls.deregister(M._name)
+	if null_ls.is_registered(LSP_NAME) then
+		null_ls.deregister(LSP_NAME)
 	end
-	null_ls.register({ name = M._name, sources = { completion_source } })
+	null_ls.register({ name = LSP_NAME, sources = { completion_source } })
 end
-
---TODO class or tag selection
-M.complitionPatterns = {
-	html = {
-		"class[%w]*=['\"].-['\"]",
-		"%.",
-	},
-	css = {
-		"%.",
-	},
-}
-M.find = function(s, pattern, pos)
-	local result = {}
-	repeat
-		result = { string.find(s, pattern, result[2] or 0) }
-		if #result == 0 then
-			return false
-		end
-	until result[2] or 0 >= pos
-	return true
-end
-
-M.createComplitionItems = function(data, search)
-	local classNames = {}
-	for key, _ in pairs(data) do
-		if string.match(key, search) then
-			local completionItem = {
-				label = key,
-				kind = 7,
-			}
-			table.insert(classNames, completionItem)
-		end
-	end
-	return classNames
-end
+return M

@@ -46,23 +46,4 @@ M.parse_css_string = function(filepath)
 	return classes
 end
 
----@return string
-M.get_lang_at_cursor = function()
-	local res, lang = pcall(function()
-		local node = ts.get_node()
-		if not node then
-			return nil
-		end
-		local range4 = { ts.get_node_range(node) }
-		local langtree = ts.get_parser()
-		return langtree:language_for_range(range4):lang()
-	end)
-	if res then
-		---@diagnostic disable-next-line: return-type-mismatch
-		return lang
-	else
-		return vim.bo.filetype
-	end
-end
-
 return M
