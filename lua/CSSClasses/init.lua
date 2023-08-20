@@ -5,16 +5,15 @@ local parsers = require("CSSClasses.parsers")
 local insertons = require("CSSClasses.insertions")
 
 LSP_NAME = "CSSClasses"
-AUGROUP = vim.api.nvim_create_augroup(LSP_NAME, { clear = true })
+AUGROUP_NAME = LSP_NAME .. "_setup"
+AUGROUP = vim.api.nvim_create_augroup(AUGROUP_NAME, { clear = true })
 local M = {}
-print("pre source")
 
 ---@param opts table | nil
 M.setup = function(opts)
-	print("setup")
-	vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+	vim.api.nvim_create_autocmd({ "FileType" }, {
 		group = AUGROUP,
-		pattern = vim.tbl_extend("keep", parsers.get_supported_files(), insertons.get_supported_files()),
+		pattern = insertons.get_supported_files(),
 		once = true,
 		callback = function(params)
 			local root = io.get_root(params.file, { ".git", ".csproj" })
@@ -26,8 +25,8 @@ M.setup = function(opts)
 
 			agrigator:init(root)
 			lsp.setup_null_ls(root)
+			vim.api.nvim_clear_autocmds({ group = AUGROUP, event = { "FileType" } })
 		end,
 	})
 end
-print("post source")
 return M
