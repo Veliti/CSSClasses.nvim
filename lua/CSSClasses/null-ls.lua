@@ -1,37 +1,24 @@
 local null_ls = require("null-ls")
 local agrigator = require("CSSClasses.agrigator")
+local insertions = require("CSSClasses.insertions")
 
 local M = {}
 M.logger = require("null-ls.logger")
 
----@type table<fs_event, function>
-
----@param root string
-M.setup_null_ls = function(root)
+M.setup_null_ls = function()
 	local completion_source = {
 		method = null_ls.methods.COMPLETION,
-		filetypes = { "html", "css" },
+		filetypes = insertions.get_supported_files(),
 		generator = {
-			async = true,
 			---@param params NullLsParams
-			fn = function(params, done)
+			fn = function(params)
 				local line = params.content[params.row]
 				local cursor = params.col
-				local patterns = M.complition_patterns[params.filetype]
 
-				local result
-				for _, pattern in ipairs(patterns) do
-					result = M.find(line, pattern, cursor)
-					if result then
-						break
-					end
+				if insertions[params.filetype] and insertions[params.filetype](line, cursor) then
+					local list = agrigator:get_complition_list()
+					return { list }
 				end
-				if not result then
-					return
-				end
-
-				local list = agrigator:get_complition_list()
-				done({ list })
 			end,
 		},
 	}

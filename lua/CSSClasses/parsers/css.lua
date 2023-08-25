@@ -1,11 +1,13 @@
 ---@type IParser
+---@alias iter fun() : number | nil, number | nil, string | nil
+
 M = {}
 
 --- gets start and end of "selectors { params }" and selectors in as string
 ---@param source string
----@return fun() : number, number, string
+---@return iter
 M._roolset_iter = function(source)
-	local needle = 0
+	local needle
 	return function()
 		local start, stop, selectors = source:find("([^{}]+){[^{}]*}", needle)
 		needle = stop
@@ -14,11 +16,11 @@ M._roolset_iter = function(source)
 end
 
 ---@param selectors string``
----@return fun() : number, number, string
+---@return iter
 M._class_iter = function(selectors)
-	local needle = 0
+	local needle
 	return function()
-		local start, stop, class = selectors:find("%.([%S]+)", needle)
+		local start, stop, class = selectors:find("%.([%w-_]+)", needle)
 		needle = stop
 		return start, stop, class
 	end
