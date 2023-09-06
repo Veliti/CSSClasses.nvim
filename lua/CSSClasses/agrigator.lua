@@ -72,7 +72,6 @@ function RuleSets:get_complition_list()
 	for class, _ in pairs(set) do
 		table.insert(comp_list.items, {
 			label = class,
-			insertText = class,
 			kind = 7,
 		})
 	end
