@@ -1,3 +1,8 @@
+-- local agrigator = require("CSSClasses.agrigator")
+-- local lsp = require("CSSClasses.null-ls")
+-- local io = require("CSSClasses.io")
+-- local parsers = require("CSSClasses.parsers")
+--
 -- LSP_NAME = "CSSClasses"
 -- AUGROUP = vim.api.nvim_create_augroup(LSP_NAME, { clear = true })
 -- local M = {}
@@ -19,8 +24,4 @@
 -- 		end,
 -- 	})
 -- end
-local M = {}
-M.setup = function(ots)
-	-- not impl
-end
-return M
+-- return M
