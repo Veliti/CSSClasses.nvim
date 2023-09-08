@@ -1,6 +1,6 @@
 local null_ls = require("null-ls")
 local agrigator = require("CSSClasses.agrigator")
-local insertions = require("CSSClasses.insertions")
+local insertion = require("CSSClasses.insertion")
 
 local M = {}
 M.logger = require("null-ls.logger")
@@ -8,15 +8,12 @@ M.logger = require("null-ls.logger")
 M.setup_null_ls = function()
 	local completion_source = {
 		method = null_ls.methods.COMPLETION,
-		filetypes = insertions.get_supported_files(),
+		filetypes = { "html", "css" },
 		generator = {
 			---@param params NullLsParams
 			fn = function(params)
-				local line = params.content[params.row]
-				local cursor = params.col
-
-				if insertions[params.filetype] and insertions[params.filetype](line, cursor) then
-					local list = agrigator:get_complition_list()
+				if insertion.is_matched(table.concat(params.content), params.col) then
+					local list = agrigator:get_complition_list(params)
 					return { list }
 				end
 			end,

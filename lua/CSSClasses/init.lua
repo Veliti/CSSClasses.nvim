@@ -2,7 +2,6 @@ local agrigator = require("CSSClasses.agrigator")
 local lsp = require("CSSClasses.null-ls")
 local io = require("CSSClasses.io")
 local parsers = require("CSSClasses.parsers")
-local insertons = require("CSSClasses.insertions")
 
 LSP_NAME = "CSSClasses"
 AUGROUP = vim.api.nvim_create_augroup(LSP_NAME, { clear = true })
@@ -14,7 +13,7 @@ M.setup = function(opts)
 
 	vim.api.nvim_create_autocmd({ "FileType" }, {
 		group = AUGROUP,
-		pattern = insertons.get_supported_files(),
+		pattern = { "html", "css" },
 		once = true,
 		callback = function(params)
 			local root = require("null-ls.utils").get_root()

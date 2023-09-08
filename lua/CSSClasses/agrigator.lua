@@ -54,8 +54,9 @@ function RuleSets:contains(filename)
 end
 
 --- https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionList
+---@param params NullLsParams
 ---@return lsp.CompletionList
-function RuleSets:get_complition_list()
+function RuleSets:get_complition_list(params)
 	local comp_list = {
 		items = {},
 		isIncomplete = false,
@@ -71,7 +72,17 @@ function RuleSets:get_complition_list()
 	end
 	for class, _ in pairs(set) do
 		table.insert(comp_list.items, {
-			label = class,
+			label = "." .. class,
+			textEdit = {
+				newText = class,
+				range = {
+					start = {
+						line = params.lsp_params.position.line,
+						character = params.lsp_params.position.character - #params.word_to_complete - 1,
+					},
+					["end"] = params.lsp_params.position,
+				},
+			},
 			kind = 7,
 		})
 	end
