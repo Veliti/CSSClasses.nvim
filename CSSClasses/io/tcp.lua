@@ -18,13 +18,12 @@ M.send = function(message)
 	assert(server:write(message))
 end
 
+---@param callback fun(err : string, data : string)
 M.listen = function(callback)
-	server:read_start(function(err, data)
-		if err then
-			print(err)
-		elseif data then
-			print(data)
-		end
+	server:listen(1, function(err)
+		assert(not err, err)
+		local client = uv.new_tcp()
+		server:accept(client)
 	end)
 end
 
