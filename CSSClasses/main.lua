@@ -1,6 +1,6 @@
 ---@type uv
 local uv = require("uv")
-local tcp = require("CSSClasses.io.tcp")
+local tcp = require("")
 tcp.start(1111)
 
 tcp.listen(function() end)
