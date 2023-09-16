@@ -1,8 +1,6 @@
-require = require("../deps/require.lua")
-
 ---@type uv
 local uv = require("uv")
-local json = require("json")
+local json = require("deps/json")
 
 print(json)
 
