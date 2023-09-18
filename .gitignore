@@ -1,3 +1,4 @@
+*.log
 #not my files
 deps/*
 meta/*
