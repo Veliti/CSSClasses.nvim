@@ -14,3 +14,5 @@ meta:
 	$(foreach url, $(META_FILES), $(shell curl --create-dirs --output-dir ./meta -O -J $(url)))
 build:
 	luvi $(SOURCE) -o $(NAME)
+
+#TODO: repl testng(luvit has it)
