@@ -1,4 +1,5 @@
 local json = require("deps.json")
+local gfind = require("CSSClasses.utils.gfind")
 
 local M = {}
 
@@ -43,23 +44,20 @@ end
 ---@param data string
 M.decode = function(data)
 	--- TODO: could be optimised luvit/json capable of part-parsing
-	local _, fend, length = data:find("Content-Length: ([%d]+)\r\n")
-	if not fend then
-		return
-	end
-	local _, fend = data:find("\r\n", fend)
-	if not fend then
-		return
+	local body_length = tonumber(data:match("Content%-Length:([%d ]+)"))
+	local header_end
+	for st, en in gfind(data, "\r\n") do
+		header_end = en
 	end
 	-- check if we have full message
-	if #data - fend >= length then
-		local message = json.decode(data:sub(fend, fend + length))
+	if #data - header_end >= body_length then
+		local message = json.decode(data:sub(header_end, header_end + body_length))
 		if not message then
 			local err = "RPC: Message decode error"
 			M.error(M.ERROR_CODES.ParseError, err)
 			error(err)
 		else
-			local rest = data:sub(fend + length, #data)
+			local rest = data:sub(header_end + body_length, #data)
 			return message, rest
 		end
 	end

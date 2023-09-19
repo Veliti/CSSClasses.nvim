@@ -13,4 +13,6 @@ rcp_test = function()
 	assert(decoded.params.hello == params.hello)
 	assert(decoded.params.number == params.number)
 end
+
 rcp_test()
+print("rcp_test: ✅")
