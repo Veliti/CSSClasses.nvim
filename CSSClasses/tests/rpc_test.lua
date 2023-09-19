@@ -15,4 +15,3 @@ rcp_test = function()
 end
 
 rcp_test()
-print("rcp_test: ✅")
