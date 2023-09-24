@@ -1,3 +1,5 @@
+LUA_PATH:=deps/?.lua;deps/?/init.lua;$(LUA_PATH)
+
 OUTPUT:=cssc-ls
 SOURCE:=./CSSClasses/
 TESTS:=$(shell echo $(SOURCE)tests/* | sed 's|$(SOURCE)||g')

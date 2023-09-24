@@ -1,8 +1,6 @@
-package.path = "deps/?.lua;" .. "deps/?/init.lua;" .. package.path
 ---@type uv
 local uv = require("uv")
-local dbg = require("debugger")
-local json = require("json")
+local jrpc = require("CSSClasses.lsp.jrcp")
 
 -- standard loop
 uv.run()
