@@ -1,6 +1,8 @@
 ---@type uv
 local uv = require("uv")
-local scan = require("plenary.scandir")
+local tbl_flatten = require("CSSClasses.utils.tbl_flatten")
+local fspath = require("path.base")
+-- local scan = require("plenary.scandir")
 
 local M = {}
 -- TODO: handle links and stuff
@@ -9,14 +11,14 @@ local M = {}
 ---@param patterns string[] | string what file dir or dir to consider a root
 ---@return string | nil root
 M.get_root = function(starting_position, patterns)
-	patterns = vim.tbl_flatten({ patterns })
-	local root = vim.fs.find(function(name, path)
+	patterns = tbl_flatten({ patterns })
+	local root = fspath.find(function(name, path)
 		for _, pattern in ipairs(patterns) do
 			local file = path .. name
 			return file:match(pattern)
 		end
 	end, { path = starting_position, limit = 1, upward = true, stop = uv.os_homedir() })
-	return vim.fs.normalize(root[1])
+	return fspath.normalize(root[1])
 end
 
 ---@param filename string
@@ -26,6 +28,29 @@ M.read_file = function(filename)
 	local source = fd:read("*a")
 	fd:close()
 	return source
+end
+
+---scans directory recurivly calls callback on every file and returns table with all files
+---@param dir string
+---@param callback fun(file : string)
+---@return string[]
+M.scan_dir = function(dir, callback)
+	local result = {}
+	local function _scan(_dir)
+		local uv_fs_t = assert(uv.fs_scandir(_dir))
+		repeat
+			local file, type, err_name, err_msg = uv.fs_scandir_next(uv_fs_t)
+			assert(not err_name and file, err_msg)
+			if type == "directory" then
+				_scan(file)
+			else
+				callback(file)
+				table.insert(result, file)
+			end
+		until not file or err_name
+	end
+	_scan(dir)
+	return result
 end
 
 ---@type uv_fs_poll_t[]
@@ -63,22 +88,17 @@ M.watch_folder = function(path, callback)
 		local curr_stat = assert(uv.fs_lstat(path))
 
 		if prev_stat.mtime.sec < curr_stat.mtime.sec then
-			scan.scan_dir(path, {
-				hidden = false,
-				respect_gitignore = true,
-				depth = math.huge,
-				on_insert = function(entry)
-					if not files[entry] then
-						callback("NEW", entry)
-					else
-						local file_stat = assert(uv.fs_lstat(entry))
-						if file_stat.mtime.sec > prev_stat.mtime.sec then
-							callback("CHANGED", entry)
-						end
+			M.scan_dir(path, function(entry)
+				if not files[entry] then
+					callback("NEW", entry)
+				else
+					local file_stat = assert(uv.fs_lstat(entry))
+					if file_stat.mtime.sec > prev_stat.mtime.sec then
+						callback("CHANGED", entry)
 					end
-					files[entry] = fstate.RECENT
-				end,
-			})
+				end
+				files[entry] = fstate.RECENT
+			end)
 			for file, state in pairs(files) do
 				if state == fstate.OLD then
 					callback("REMOVED", file)
@@ -92,8 +112,8 @@ M.watch_folder = function(path, callback)
 	end)
 end
 
-M.encode = function (name, )
-  
-end
+-- M.encode = function (name, )
+--
+-- end
 
 return M

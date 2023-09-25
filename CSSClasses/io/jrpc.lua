@@ -1,8 +1,9 @@
+---@type uv
+local uv = require("uv")
 local json = require("json")
 local gfind = require("CSSClasses.utils.gfind")
 
 local M = {}
-
 ---@class RPCMessage
 ---@field id number?
 ---@field method string?
@@ -15,9 +16,14 @@ local M = {}
 ---@field message string
 ---@field data string | number | boolean | table | nil
 
----@param tbl RPCMessage
----@return string
-M.encode = function(tbl)
+local stdin = assert(uv.new_pipe(false))
+assert(stdin:open(0))
+local stdout = assert(uv.new_pipe(false))
+assert(stdout:open(1))
+
+local global_id = 0
+
+local pack = function(tbl)
 	tbl.jsonrpc = "2.0"
 	local content = json.encode(tbl)
 	return table.concat({
@@ -26,6 +32,59 @@ M.encode = function(tbl)
 		"\r\n\r\n",
 		content,
 	})
+end
+
+-- M.lisen = function(callback)
+-- 	stdout:read_start(function(err, data)
+-- 		assert(not err, err)
+-- 		if data then
+-- 			callback(data)
+-- 		end
+-- 	end)
+-- end
+
+M.notify = function(method, params)
+	stdout:write(pack({
+		method = method,
+		params = params,
+	}))
+end
+
+M.request = function(method, params)
+	global_id = global_id + 1
+	stdout:write(pack({
+		id = global_id,
+		method = method,
+		params = params,
+	}))
+	return global_id
+end
+
+M.response = function(id, result, err)
+	stdout:write(pack({
+		id = id,
+		result = result,
+		error = err,
+	}))
+end
+
+---lisen for incoming messages
+---@param callback fun(msg: RPCMessage)
+M.lisen = function(callback)
+	local data = ""
+	stdin:read_start(function(err, part)
+		assert(not err, err)
+		if part then
+			data = data .. part
+		end
+	end)
+	-- stdio.lisen(function(part)
+	-- 	local msg, rest = jrpc.decode(data)
+	-- 	if msg then
+	-- 		callback(msg)
+	-- 		data = rest
+	-- 	end
+	-- end)
 end
 
 ---try to decode message

@@ -1,9 +1,10 @@
 local parsers = require("CSSClasses.parsers")
 local ftdetect = require("plenary.filetype")
-local io = require("CSSClasses.io")
 
 ---@class RuleSet
 ---@field classnames string[]
+---@field file string
+---@field text string
 ---@field bounds {upper: number, lower : number}
 
 ---@class RuleSets

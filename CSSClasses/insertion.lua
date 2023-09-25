@@ -1,8 +1,9 @@
+local tbl_flatten = require("CSSClasses.utils.tbl_flatten")
 ---@param s string
 ---@param pos integer
 ---@param patterns string | string[]
 local is_matched = function(s, pos, patterns)
-	patterns = vim.tbl_flatten({ patterns })
+	patterns = tbl_flatten({ patterns })
 	for _, pattern in pairs(patterns) do
 		local start, stop
 		repeat
